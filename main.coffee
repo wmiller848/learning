@@ -149,4 +149,4 @@ for i in [0...100]
   web.learn(inputs)
 
 evaluate_web()
-console.log(web)
+# console.log(web)

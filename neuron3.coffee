@@ -78,9 +78,10 @@ class Web
         for i in [0...(input_obj.input.length - @nerves.length)]
           @nerves.push(new Nerve())
     #############################
-    ## Enforce the two guaratees
+    ## Enforce the three guaratees
     ## 1) Each nerve has a devoted neuron
-    ## 2) This unqiue set of inputs has a devoted neuron
+    ## 2) This unique set of inputs has one devoted neuron
+    ## 3) This unique set of inputs has at least one distributed neuron
     #############################
     for nerve in @nerves
       unless @event.is_registered(nerve.key)
@@ -88,6 +89,7 @@ class Web
         @event.register(nerve.key, neuron)
         @neurons.push(neuron)
     ##
+    ## Go through each input and
     ##
     for input_obj in inputs
       input = input_obj.input
@@ -112,7 +114,7 @@ class Web
         @event.register(keys_str, neuron)
         @neurons.push(neuron)
 
-        neuron = new Neuron(keys.length * 3)
+        neuron = new Neuron(keys.length * 3) # magic scaling value
         # neuron = new Neuron()
         # @event.register(keys_str, null) # register a stub
         @event.register(key, neuron) for key in keys
