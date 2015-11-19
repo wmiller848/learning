@@ -1,148 +1,152 @@
 # neuron = require('./neuron')
 neuron3 = require('./neuron3')
+_ = require('underscore')
 
-# size = 3 * 3
-# labels = {}
-# for label in [0...size]
-#   labels[label] = 'Q'
-#
-# input =
-#   size: size,
-#   labels: labels
-
-web = new neuron3.Web('Image recog', 'Some cool shit')
-input = [
-  [
-    1,0,0,
-    1,0,0,
-    1,0,0
-  ],
-  [
-    1,0,1,
-    1,1,0,
-    1,1,0
-  ],
-  [
-    1,0,1,
-    0,0,0,
-    0,0,0
-  ],
-  [
-    0,0,1,
-    0,0,1,
-    1,0,0
-  ],
-  [
-    1,0,1,
-    0,0,0,
-    1,1,1
-  ],
-  [
-    0,1,0,
-    0,1,0,
-    0,1,0
-  ],
-  [
-    0,0,0,
-    1,1,1,
-    0,0,0
-  ],
-  [
-    0,0,0,
-    0,0,1,
-    0,0,1
-  ],
-  [
-    1,1,1,
-    1,1,1,
-    1,1,1
-  ]
-]
-guidelines = [
-  [
-    1,1,1,
-    0,0,0,
-    0,0,0
-  ],
-  [
-    1,0,0,
-    1,0,0,
-    1,0,0
-  ],
-  [
-    0,0,1,
-    0,0,1,
-    0,0,1
-  ],
-  [
-    0,0,0,
-    0,0,0,
-    1,1,1
-  ],
-  [
-    1,0,0,
-    0,1,0,
-    0,0,1
-  ],
-  [
-    0,0,1,
-    0,1,0,
-    1,0,0
-  ],
-  [
-    0,1,0,
-    0,1,0,
-    0,1,0
-  ],
-  [
-    0,0,0,
-    1,1,1,
-    0,0,0
-  ]
-]
-# web.learn(guidelines, guidelines)
-web.learn(input, guidelines)
-# console.log(web.network)
-
+input_size = 4*4
+web = new neuron3.Web('Basic edge recognition', 'Some cool fucking description')
 console.log(web)
 
-web.evaluate([
-    0,0,0,
-    1,1,1,
-    0,0,0
-])
+guidelines = [
+  {
+    input:[
+      1,1,0,0,
+      1,1,0,0,
+      0,0,0,0,
+      0,0,0,0
+    ],
+    guideline: true
+  },
+  {
+    input:[
+      0,0,1,1,
+      0,0,1,1,
+      0,0,0,0,
+      0,0,0,0
+    ],
+    guideline: true
+  },
+  {
+    input:[
+      0,0,0,0,
+      0,0,0,0,
+      1,1,0,0,
+      1,1,0,0
+    ],
+    guideline: true
+  },
+  {
+    input:[
+      0,0,0,0,
+      0,0,0,0,
+      0,0,1,1,
+      0,0,1,1
+    ],
+    guideline: true
+  },
+  {
+    input:[
+      0,0,0,0,
+      0,1,1,0,
+      0,1,1,0,
+      0,0,0,0
+    ],
+    guideline: true
+  },
+  {
+    input:[
+      1,1,1,1,
+      1,1,1,1,
+      1,1,1,1,
+      1,1,1,1
+    ],
+    guideline: true
+  }
+]
 
-web.evaluate([
-    0,0,1,
-    0,0,1,
-    0,0,1
-])
+gen_random_input = (num_inputs) ->
+  input = []
+  input.push(parseInt(Math.random()*2)) for i in [0...num_inputs]
+  for guideline in guidelines
+    return gen_random_input(num_inputs) if _.isEqual(input, guideline.input)
+  input
 
-web.evaluate([
-    0,0,1,
-    0,0,1,
-    0,0,1
-])
+evaluate_web = ->
+  input = [
+    1,1,1,1,
+    1,1,1,1,
+    1,1,1,1,
+    1,1,1,1
+  ]
+  thought = web.evaluate(input)
+  console.log('Good Input', input, thought)
 
-# bias =
-#   size: 3
-#
-# output =
-#   size: 2,
-#   labels:
-#     0: 'Has Edges',
-#     1: 'Doesnt Have Edges'
+  input = [
+    0,0,1,1,
+    0,0,1,1,
+    0,0,0,0,
+    0,0,0,0
+  ]
+  thought = web.evaluate(input)
+  console.log('Good Input', input, thought)
 
-# console.log(quantum, bias, output)
-#
-# edge_detect = new neuron.Web(input, bias, output)
-# data = (Math.random() for value in [0...input.size])
-# edge_detect.fire(data)
-# # console.log(edge_detect)
-#
-# results = edge_detect.learn()
-# console.log(results)
+  input = [
+    0,0,0,0,
+    0,1,1,0,
+    0,1,1,0,
+    0,0,0,0
+  ]
+  thought = web.evaluate(input)
+  console.log('Good Input', input, thought)
 
-#
-# rm = web.get_random_member(0)
-# console.log(rm)
+  input = [
+    1,1,0,0,
+    1,1,0,0,
+    0,0,0,0,
+    0,0,0,0
+  ]
+  thought = web.evaluate(input)
+  console.log('Good Input', input, thought)
+
+  input = [
+    0,0,0,0,
+    0,0,0,0,
+    0,0,1,1,
+    0,0,1,1
+  ]
+  thought = web.evaluate(input)
+  console.log('Good Input', input, thought)
+
+  input = [
+    1,1,0,0,
+    1,1,0,0,
+    0,0,1,0,
+    0,0,0,0
+  ]
+  thought = web.evaluate(input)
+  console.log('Bad Input ', input, thought)
+
+  input = gen_random_input(input_size)
+  thought = web.evaluate(input)
+  console.log('Bad Input ', input, thought)
+
+  input = gen_random_input(input_size)
+  thought = web.evaluate(input)
+  console.log('Bad Input ', input, thought)
+
+  input = gen_random_input(input_size)
+  thought = web.evaluate(input)
+  console.log('Bad Input ', input,thought)
+
+for i in [0...100]
+  inputs = []
+  inputs.push({
+    input: gen_random_input(input_size),
+    guideline: false
+  }) for i in [0...6]
+
+  inputs.push(guideline) for guideline in guidelines
+  # console.log(inputs)
+  web.learn(inputs)
+
+evaluate_web()
+console.log(web)
