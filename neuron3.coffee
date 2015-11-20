@@ -32,7 +32,7 @@ class Neuron
     callback(@bias / @bonds)
   update: (value) ->
     if value > 0
-      @power += 0.01
+      @power += 0.05
     else if @power > 1
       @power -= 0.1
     @bias += (value * @power / @bonds)
@@ -49,7 +49,7 @@ class Web
   ripple: (nerves, desire, keys_str) ->
     ##
     light = 10
-    heavy = 1000
+    heavy = 5000
     ##
     ##
     if desire is true
@@ -89,7 +89,7 @@ class Web
         @event.register(nerve.key, neuron)
         @neurons.push(neuron)
     ##
-    ## Go through each input and
+    ## Go through each input and apply the learning
     ##
     for input_obj in inputs
       input = input_obj.input
@@ -115,8 +115,6 @@ class Web
         @neurons.push(neuron)
 
         neuron = new Neuron(keys.length * 3) # magic scaling value
-        # neuron = new Neuron()
-        # @event.register(keys_str, null) # register a stub
         @event.register(key, neuron) for key in keys
         @neurons.push(neuron)
 

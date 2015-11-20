@@ -4,7 +4,6 @@ _ = require('underscore')
 
 input_size = 4*4
 web = new neuron3.Web('Basic edge recognition', 'Some cool fucking description')
-console.log(web)
 
 guidelines = [
   {
@@ -46,6 +45,42 @@ guidelines = [
   {
     input:[
       0,0,0,0,
+      1,1,0,0,
+      1,1,0,0,
+      0,0,0,0
+    ],
+    guideline: true
+  },
+  {
+    input:[
+      0,0,0,0,
+      0,0,1,1,
+      0,0,1,1,
+      0,0,0,0
+    ],
+    guideline: true
+  },
+  {
+    input:[
+      0,1,1,0,
+      0,1,1,0,
+      0,0,0,0,
+      0,0,0,0
+    ],
+    guideline: true
+  },
+  {
+    input:[
+      0,0,0,0,
+      0,0,0,0,
+      0,1,1,0,
+      0,1,1,0
+    ],
+    guideline: true
+  },
+  {
+    input:[
+      0,0,0,0,
       0,1,1,0,
       0,1,1,0,
       0,0,0,0
@@ -79,6 +114,7 @@ evaluate_web = ->
   ]
   thought = web.evaluate(input)
   console.log('Good Input', input, thought)
+  console.log('WRONG!') if thought.belief is false
 
   input = [
     0,0,1,1,
@@ -88,6 +124,7 @@ evaluate_web = ->
   ]
   thought = web.evaluate(input)
   console.log('Good Input', input, thought)
+  console.log('WRONG!') if thought.belief is false
 
   input = [
     0,0,0,0,
@@ -97,6 +134,7 @@ evaluate_web = ->
   ]
   thought = web.evaluate(input)
   console.log('Good Input', input, thought)
+  console.log('WRONG!') if thought.belief is false
 
   input = [
     1,1,0,0,
@@ -106,6 +144,7 @@ evaluate_web = ->
   ]
   thought = web.evaluate(input)
   console.log('Good Input', input, thought)
+  console.log('WRONG!') if thought.belief is false
 
   input = [
     0,0,0,0,
@@ -115,6 +154,17 @@ evaluate_web = ->
   ]
   thought = web.evaluate(input)
   console.log('Good Input', input, thought)
+  console.log('WRONG!') if thought.belief is false
+
+  input = [
+    0,0,0,0,
+    0,0,1,1,
+    0,0,1,1,
+    0,0,0,0
+  ]
+  thought = web.evaluate(input)
+  console.log('Good Input', input, thought)
+  console.log('WRONG!') if thought.belief is false
 
   input = [
     1,1,0,0,
@@ -124,25 +174,29 @@ evaluate_web = ->
   ]
   thought = web.evaluate(input)
   console.log('Bad Input ', input, thought)
+  console.log('WRONG!') if thought.belief is true
 
   input = gen_random_input(input_size)
   thought = web.evaluate(input)
   console.log('Bad Input ', input, thought)
+  console.log('WRONG!') if thought.belief is true
 
   input = gen_random_input(input_size)
   thought = web.evaluate(input)
   console.log('Bad Input ', input, thought)
+  console.log('WRONG!') if thought.belief is true
 
   input = gen_random_input(input_size)
   thought = web.evaluate(input)
   console.log('Bad Input ', input,thought)
+  console.log('WRONG!') if thought.belief is true
 
-for i in [0...100]
+for i in [0...500]
   inputs = []
   inputs.push({
     input: gen_random_input(input_size),
     guideline: false
-  }) for i in [0...6]
+  }) for i in [0...guidelines.length]
 
   inputs.push(guideline) for guideline in guidelines
   # console.log(inputs)
