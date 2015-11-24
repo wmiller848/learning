@@ -1,6 +1,14 @@
 crypto = require('crypto')
 _ = require('underscore')
 
+#################
+###########
+###########
+##
+##
+###########
+###########
+#################
 class Event
   constructor: ->
     @_events = {}
@@ -19,27 +27,51 @@ class Event
     else
       0
 
+#################
+###########
+###########
+##
+##
+###########
+###########
+#################
 class Nerve
   constructor: ->
     @key = crypto.randomBytes(16).toString('hex')
 
+#################
+###########
+###########
+##
+##
+###########
+###########
+#################
 class Neuron
   constructor: (@bonds=1) ->
     @bonds = 1 if @bonds <= 0
     @bias = 0
     @power = 1
   fire: (callback) ->
-    callback(@bias / @bonds)
+    callback(@bias)
   update: (value) ->
     if value > 0
       @power += 0.05
     else if @power > 1
       @power -= 0.1
-    @bias += (value * @power / @bonds)
+    @bias += (value * @power / Math.pow(@bonds, 2))
 
+#################
+###########
+###########
+##
+##
+###########
+###########
+#################
 
 class Web
-  constructor: (@topic, @description) ->
+  constructor: () ->
     @nerves = []
     @neurons = []
     @event = new Event()
@@ -69,7 +101,7 @@ class Web
       @event.ripple(keys_str, heavy_influence)
       @negative_influence++
     @influence++
-  learn: (inputs, guidelines) ->
+  learn: (inputs) ->
     ##############
     ## Make sure we have enough nerves ready for this input
     ##############
@@ -156,4 +188,54 @@ class Web
     belief: (sureness > threshold ? true : false),
     sureness: sureness
 
+
+#################
+###########
+###########
+##
+##
+###########
+###########
+#################
+class Network
+  constructor: (@depth=1, @topic, @description) ->
+    @root_web = new Web()
+    ##
+    ## 20 x 20 px image
+    ## 5 x 5 grid
+    ## 25 - 4 x 4 webs
+    ##
+    @child_webs = []
+    @child_webs.push(new Web()) for i in [0...25]
+  learn: (inputs) ->
+    ##
+    ## Example : 20 x 20 image
+    ## [  0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4  ]
+    ##
+    # for input_image in inputs
+    #   for n in [n...5]
+    #     input = input_image.splice(n, n)
+
+  evaluate: ->
+
 exports.Web = Web
+exports.Network = Network

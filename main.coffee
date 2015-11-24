@@ -1,9 +1,8 @@
-# neuron = require('./neuron')
-neuron3 = require('./neuron3')
+network = require('./network')
 _ = require('underscore')
 
 input_size = 4*4
-web = new neuron3.Web('Basic edge recognition', 'Some cool fucking description')
+web = new network.Web('Basic edge recognition', 'Some cool fucking description')
 
 guidelines = [
   {
@@ -191,12 +190,12 @@ evaluate_web = ->
   console.log('Bad Input ', input,thought)
   console.log('WRONG!') if thought.belief is true
 
-for i in [0...500]
+for i in [0...10]
   inputs = []
   inputs.push({
     input: gen_random_input(input_size),
     guideline: false
-  }) for i in [0...guidelines.length]
+  }) for i in [0...guidelines.length * 2]
 
   inputs.push(guideline) for guideline in guidelines
   # console.log(inputs)
