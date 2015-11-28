@@ -36,7 +36,7 @@ class Event
 ###########
 #################
 class Nerve
-  constructor: ->
+  constructor: (@input=1) ->
     @key = crypto.randomBytes(16).toString('hex')
 
 #################
@@ -56,12 +56,12 @@ class Neuron
     callback(@bias)
   update: (value) ->
     if value > 0
-      @power += 0.05
+      @power += @power / 100
     else if @power > 1
-      @power -= 0.1
-    @bias += (value * @power / Math.pow(@bonds, 2))
+      @power -= @power / 100
+    @bias += (value * @power / Math.pow(@bonds, 4))
 
-#################
+################4
 ###########
 ###########
 ##
@@ -81,7 +81,7 @@ class Web
   ripple: (nerves, desire, keys_str) ->
     ##
     light = 10
-    heavy = 5000
+    heavy = 100
     ##
     ##
     if desire is true
@@ -100,7 +100,7 @@ class Web
       @event.ripple(nerve.key, light_influence) for nerve in nerves
       @event.ripple(keys_str, heavy_influence)
       @negative_influence++
-    @influence++
+    @influence+=2
   learn: (inputs) ->
     ##############
     ## Make sure we have enough nerves ready for this input
@@ -132,6 +132,7 @@ class Web
       c = 0
       nerves = []
       for nerve in @nerves
+        nerve.input = input[c]
         nerves.push(nerve) if c < input.length and input[c] isnt 0
         c++
       ##
@@ -146,7 +147,7 @@ class Web
         @event.register(keys_str, neuron)
         @neurons.push(neuron)
 
-        neuron = new Neuron(keys.length * 3) # magic scaling value
+        neuron = new Neuron(keys.length)
         @event.register(key, neuron) for key in keys
         @neurons.push(neuron)
 
@@ -162,11 +163,12 @@ class Web
 
       @ripple(nerves, desire, keys_str)
 
-  evaluate: (input, guideline) ->
+  evaluate: (input) ->
     keys = []
     c = 0
     nerves = []
     for nerve in @nerves
+      nerve.input = input[c]
       nerves.push(nerve) if c < input.length and input[c] isnt 0
       c++
     for nerve in nerves
@@ -198,44 +200,149 @@ class Web
 ###########
 #################
 class Network
-  constructor: (@depth=1, @topic, @description) ->
-    @root_web = new Web()
+  constructor: (@size=2, @block_size=1) ->
+    @web = new Web()
     ##
-    ## 20 x 20 px image
-    ## 5 x 5 grid
-    ## 25 - 4 x 4 webs
+    ## size x size px image
     ##
     @child_webs = []
-    @child_webs.push(new Web()) for i in [0...25]
-  learn: (inputs) ->
+    @child_webs.push(new Web()) for i in [0...(@size * @size) / (@block_size * @block_size)]
+  get_block: (inputs, x1, y1, x2, y2) ->
+    block = []
+    xx = x1
+    yy = y1
+    working = true
+    while working
+      input = inputs[xx + @size * yy]
+      input = -1 if typeof(input) is 'undefined'
+      block.push(input)
+      if xx >= x2 and yy >= y2
+        working = false
+        break
+
+      xx++
+      if xx > x2
+        xx = x1
+        yy++
+        if yy > y2
+          yy = y1
+    block
+  learn: (inputs, guideline) ->
     ##
     ## Example : 20 x 20 image
-    ## [  0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
-    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
-    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
-    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
-    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
-    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
-    ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
-    ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4  ]
-    ##
+    ########
+    ########    0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 x
+    ##    ##    #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
+    ##    ##    #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
+    ## 0  ## [  0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 1  ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 2  ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 3  ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 4  ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ## 5  ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ## 6  ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ## 7  ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ## 8  ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 9  ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 10 ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 11 ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 12 ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ## 13 ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ## 14 ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ## 15 ##    5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9,
+    ## 16 ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 17 ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 18 ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ## 19 ##    0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4  ]
+    ## y  ##
     # for input_image in inputs
     #   for n in [n...5]
     #     input = input_image.splice(n, n)
 
-  evaluate: ->
+    _web_guide = []
+    if inputs.length > @size * @size
+      return console.log("Invalid input size of #{inputs.length}")
+    len = @size * @size
+    x = 0
+    y = 0
+    for child in @child_webs
+      x1 = x
+      y1 = y
+
+      x2 = x1 + (@block_size - 1)
+      y2 = y1 + (@block_size - 1)
+
+      x2 = @size - 1 if x2 >= @size
+      y2 = @size - 1 if y2 >= @size
+
+      _blocks = @get_block(inputs, x1, y1, x2, y2)
+      # console.log(x1, y1, x2, y2, _blocks)
+      blocks = [{
+        input: _blocks,
+        guideline: guideline # this is lame
+      }]
+      child.learn(blocks)
+      x += @block_size
+      if x >= @size
+        x = 0
+        y += @block_size
+      if y >= @size
+        y = 0
+
+      evl = child.evaluate(_blocks)
+      _web_guide.push(evl.sureness)
+    # console.log(_web_guide, @web)
+    @web.learn([{
+      input: _web_guide,
+      guideline: guideline
+    }])
+    # console.log(@web, @child_webs)
+    # console.log(_web_guide)
+
+  evaluate: (inputs) ->
+    _web_guide = []
+    if inputs.length > @size * @size
+      return console.log("Invalid input size of #{inputs.length}")
+    len = @size * @size
+    x = 0
+    y = 0
+    for child in @child_webs
+      x1 = x
+      y1 = y
+
+      x2 = x1 + (@block_size - 1)
+      y2 = y1 + (@block_size - 1)
+
+      x2 = @size - 1 if x2 >= @size
+      y2 = @size - 1 if y2 >= @size
+
+      _blocks = @get_block(inputs, x1, y1, x2, y2)
+      x += @block_size
+      if x >= @size
+        x = 0
+        y += @block_size
+      if y >= @size
+        y = 0
+
+      evl = child.evaluate(_blocks)
+      _web_guide.push(evl.sureness)
+    # console.log(_web_guide, @web)
+    @web.evaluate(_web_guide)
+
+
+#################
+###########
+###########
+##
+##
+###########
+###########
+#################
+class Hive
+  constructor: (depth) ->
+    @key = crypto.randomBytes(16).toString('hex')
+
 
 exports.Web = Web
 exports.Network = Network
+exports.Hive = Hive
