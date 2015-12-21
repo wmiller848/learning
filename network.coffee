@@ -4,8 +4,8 @@ _ = require('underscore')
 #################
 ###########
 ###########
-##
-##
+##  EVENT
+##  Manger for message passing (could be async in the future)
 ###########
 ###########
 #################
@@ -27,11 +27,12 @@ class Event
     else
       0
 
+
 #################
 ###########
 ###########
-##
-##
+##  NERVE
+##  Unit of input
 ###########
 ###########
 #################
@@ -39,11 +40,12 @@ class Nerve
   constructor: (@input=1) ->
     @key = crypto.randomBytes(16).toString('hex')
 
+
 #################
 ###########
 ###########
-##
-##
+##  NEURON
+##  Unit of compute
 ###########
 ###########
 #################
@@ -64,8 +66,8 @@ class Neuron
 ################4
 ###########
 ###########
-##
-##
+##  WEB
+##  Map of inputs and compute
 ###########
 ###########
 #################
@@ -162,7 +164,6 @@ class Web
       )
 
       @ripple(nerves, desire, keys_str)
-
   evaluate: (input) ->
     keys = []
     c = 0
@@ -194,8 +195,8 @@ class Web
 #################
 ###########
 ###########
-##
-##
+##  WEB
+##  Manger of webs
 ###########
 ###########
 #################
@@ -205,8 +206,10 @@ class Network
     ##
     ## size x size px image
     ##
+    blocks = (@size * @size) / (@block_size * @block_size)
+    console.log(blocks)
     @child_webs = []
-    @child_webs.push(new Web()) for i in [0...(@size * @size) / (@block_size * @block_size)]
+    @child_webs.push(new Web()) for i in [0...blocks]
   get_block: (inputs, x1, y1, x2, y2) ->
     block = []
     xx = x1
@@ -219,7 +222,6 @@ class Network
       if xx >= x2 and yy >= y2
         working = false
         break
-
       xx++
       if xx > x2
         xx = x1
@@ -229,7 +231,7 @@ class Network
     block
   learn: (inputs, guideline) ->
     ##
-    ## Example : 20 x 20 image
+    ## Example : 20 x 20 input
     ########
     ########    0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 x
     ##    ##    #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
@@ -298,7 +300,6 @@ class Network
     }])
     # console.log(@web, @child_webs)
     # console.log(_web_guide)
-
   evaluate: (inputs) ->
     _web_guide = []
     if inputs.length > @size * @size
@@ -333,7 +334,7 @@ class Network
 #################
 ###########
 ###########
-##
+##  HIVE
 ##
 ###########
 ###########
@@ -343,6 +344,14 @@ class Hive
     @key = crypto.randomBytes(16).toString('hex')
 
 
+#################
+###########
+###########
+##
+##
+###########
+###########
+#################
 exports.Web = Web
 exports.Network = Network
 exports.Hive = Hive

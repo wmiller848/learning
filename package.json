@@ -1,0 +1,25 @@
+{
+  "name": "learning",
+  "version": "1.0.0",
+  "description": "machine learning with a twist",
+  "main": "main.js",
+  "dependencies": {
+    "underscore": "^1.8.3",
+    "pngparse": "^2.0.1",
+    "async": "^1.5.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wmiller848/learning.git"
+  },
+  "author": "",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/wmiller848/learning/issues"
+  },
+  "homepage": "https://github.com/wmiller848/learning#readme"
+}
